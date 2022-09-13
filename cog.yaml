@@ -1,0 +1,52 @@
+# Reference: https://github.com/replicate/cog/blob/main/docs/yaml.md
+
+build:
+  gpu: True
+  cuda: "11.3"
+  python_version: "3.8"
+
+  system_packages:
+    - "libgl1-mesa-glx"
+    - "libglib2.0-0"
+    - "ffmpeg"
+
+  python_version: "3.8"
+
+  python_packages:
+    - "scikit-image==0.19.3"
+    - "clean_fid==0.1.28"
+    - "torch==1.11.0 --extra-index-url=https://download.pytorch.org/whl/cu113"
+    - "torchvision==0.12.0 --extra-index-url=https://download.pytorch.org/whl/cu113"
+    - "ftfy==6.1.1"
+    - "scipy==1.9.0"
+    - "transformers==4.21.1"
+    - "omegaconf==2.1.1"
+    - "einops==0.3.0"
+    - "pytorch-lightning==1.4.2"
+    - "torchmetrics==0.6.0"
+    - "kornia==0.6"
+    - "accelerate==0.12.0"
+    - "jsonmerge==1.8.0"
+    - "resize-right==0.0.2"
+    - "torchdiffeq==0.2.3"
+    - "opencv-python==4.6.0.66"
+    - "timm==0.6.7"
+    - "pytorch_msssim==0.2.1"
+    - "lpips==0.1.4"
+    - "moviepy==1.0.3"
+
+  pre_install:
+   - git clone https://github.com/deforum/k-diffusion
+   - git clone https://github.com/MSFTserver/pytorch3d-lite.git
+   - git clone https://github.com/isl-org/MiDaS.git
+   - git clone https://github.com/genekogan/AdaBins
+   - git clone https://github.com/CompVis/taming-transformers
+   - git clone https://github.com/openai/CLIP
+   - pip install -e ./CLIP
+   - pip install -e ./taming-transformers
+   - mv MiDaS/utils.py MiDaS/midas_utils.py
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev
+
+predict: "predict.py:Predictor"
+
+image: "r8.im/genekogan/eden-stable-diffusion"
