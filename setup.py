@@ -1,40 +1,20 @@
-# Prediction interface for Cog ⚙️
-# https://github.com/replicate/cog/blob/main/docs/python.md
 import os
-os.environ["TORCH_HOME"]="/src/.torch"
-
 import sys
+
+os.environ["TORCH_HOME"] = "/src/.torch"
+os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
+
 sys.path.extend([
-    "/CLIP"
-    "/taming-transformers",
     "/stable-diffusion-dev",
     "/stable-diffusion-dev/eden",
-    "/k-diffusion",
-    "/pytorch3d-lite",
-    "/MiDaS",
-    "/AdaBins"
 ])
 
-
-import importlib
+from sd import get_model
 import lpips
-#from ldm.util import instantiate_from_config
-import torch
-from omegaconf import OmegaConf
 
+config_path = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
+ckpt_path = "./sd-v1-4.ckpt"
 
-import lpips
-from ldm.util import instantiate_from_config
-import torch
-from omegaconf import OmegaConf
-
-config_file = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
-config_yaml = OmegaConf.load(config_file)
-print(config_yaml)
-
-
-
-instantiate_from_config(config_yaml.model)
-
+get_model(config_path, ckpt_path, True)
 
 lpips_perceptor = lpips.LPIPS(net='alex')

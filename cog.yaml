@@ -46,7 +46,7 @@ build:
    - pip install -e ./taming-transformers
    - mv MiDaS/utils.py MiDaS/midas_utils.py
    - git clone https://github.com/abraham-ai/stable-diffusion-dev
-
+   
 predict: "predict.py:Predictor"
 
 image: "r8.im/genekogan/eden-stable-diffusion"

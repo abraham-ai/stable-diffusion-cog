@@ -1,7 +1,14 @@
-# Prediction interface for Cog ⚙️
-# https://github.com/replicate/cog/blob/main/docs/python.md
-
+import os
 import sys
+import tempfile
+import random
+import hashlib
+import moviepy.editor as mpy
+import numpy as np
+
+os.environ["TORCH_HOME"] = "/src/.torch"
+os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
+
 sys.path.extend([
     "/CLIP"
     "/taming-transformers",
@@ -13,12 +20,6 @@ sys.path.extend([
     "/AdaBins"
 ])
 
-import os
-import tempfile
-import random
-import hashlib
-import moviepy.editor as mpy
-import numpy as np
 
 from settings import StableDiffusionSettings
 from sd import get_model
