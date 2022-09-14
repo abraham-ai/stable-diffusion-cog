@@ -1,9 +1,9 @@
 # Reference: https://github.com/replicate/cog/blob/main/docs/yaml.md
 
 build:
-  gpu: True
-  cuda: "11.3"
-  python_version: "3.8"
+  gpu: true
+  cuda: "11.6.2"
+  python_version: "3.10"
 
   system_packages:
     - "libgl1-mesa-glx"
@@ -15,8 +15,8 @@ build:
   python_packages:
     - "scikit-image==0.19.3"
     - "clean_fid==0.1.28"
-    - "torch==1.10.2"
-    - "torchvision==0.11.3"
+    - "torch==1.12.1 --extra-index-url=https://download.pytorch.org/whl/cu116"
+    - "torchvision==0.13.1 --extra-index-url=https://download.pytorch.org/whl/cu116"
     - "ftfy==6.1.1"
     - "scipy==1.9.0"
     - "transformers==4.21.1"
