@@ -15,8 +15,8 @@ build:
   python_packages:
     - "scikit-image==0.19.3"
     - "clean_fid==0.1.28"
-    - "torch==1.11.0 --extra-index-url=https://download.pytorch.org/whl/cu113"
-    - "torchvision==0.12.0 --extra-index-url=https://download.pytorch.org/whl/cu113"
+    - "torch==1.10.2"
+    - "torchvision==0.11.3"
     - "ftfy==6.1.1"
     - "scipy==1.9.0"
     - "transformers==4.21.1"
@@ -42,11 +42,11 @@ build:
    - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/CompVis/taming-transformers
    - git clone https://github.com/openai/CLIP
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev
    - pip install -e ./CLIP
    - pip install -e ./taming-transformers
    - mv MiDaS/utils.py MiDaS/midas_utils.py
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev
    
 predict: "predict.py:Predictor"
 
-image: "r8.im/genekogan/eden-stable-diffusion"
+image: "r8.im/genekogan/stable-diffusion-cog"
