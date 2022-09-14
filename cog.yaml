@@ -10,8 +10,6 @@ build:
     - "libglib2.0-0"
     - "ffmpeg"
 
-  python_version: "3.8"
-
   python_packages:
     - "scikit-image==0.19.3"
     - "clean_fid==0.1.28"
