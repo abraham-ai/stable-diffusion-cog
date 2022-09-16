@@ -48,4 +48,4 @@ build:
 
 predict: "predict.py:Predictor"
 
-image: "r8.im/genekogan/eden-stable-diffusion"
+image: "r8.im/abraham-ai/eden-stable-diffusion"
