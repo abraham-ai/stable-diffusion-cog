@@ -16,5 +16,4 @@ config_path = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
 ckpt_path = "./sd-v1-4.ckpt"
 
 get_model(config_path, ckpt_path, True)
-
-lpips_perceptor = lpips.LPIPS(net='alex')
+lpips.LPIPS(net='alex')
