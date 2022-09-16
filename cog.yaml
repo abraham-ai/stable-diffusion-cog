@@ -38,7 +38,6 @@ build:
    - git clone https://github.com/openai/CLIP
    - pip install -e ./CLIP
    - pip install -e ./taming-transformers
-   - mv MiDaS/utils.py MiDaS/midas_utils.py
    
 predict: "predict.py:Predictor"
 
