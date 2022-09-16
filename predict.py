@@ -7,7 +7,7 @@ from typing import Iterator
 import moviepy.editor as mpy
 import numpy as np
 
-
+fidx = 1
 os.environ["TORCH_HOME"] = "/src/.torch"
 os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
 
@@ -183,7 +183,7 @@ class Predictor(BasePredictor):
         rotation_y: float = Input(description="Rotation U (animation_mode==3D)", ge=-1, le=1, default=0),
         rotation_z: float = Input(description="Rotation Z (animation_mode==3D)", ge=-1, le=1, default=0)
 
-    ) -> Iterator[Path]:
+    ) -> Path:
 
         import generation
 
@@ -192,6 +192,8 @@ class Predictor(BasePredictor):
             ckpt = self.ckpt_path,
             precision= 'autocast',
             half_precision = True,
+
+            mode = mode,
 
             W = width - (width % 64),
             H = height - (height % 64),
@@ -230,29 +232,23 @@ class Predictor(BasePredictor):
             rotation = [rotation_x, rotation_y, rotation_z]
         )
 
-        print(settings)
-
-
         if mode == "generate":
-            print('generate')
             final_images = generation.make_images(settings, callback=None)
             out_path = Path(tempfile.mkdtemp()) / "out.png"
             final_images[0].save(str(out_path))
-            yield Path(out_path)
+            return out_path
 
-        elif mode == "interpolate":
-            print('interpolate')
-            frames = []
-            for f, frame in enumerate(generation.make_interpolation(settings, save_frames=False, callback=None)):
-                out_path = Path(tempfile.mkdtemp()) / "frame.png"
-                frame.save(str(out_path))
-                frames.append(np.array(frame))
-                yield Path(out_path)
+        else:
+            
+            if mode == "interpolate":
+                frames = generation.make_interpolation(settings, save_frames=False, callback=None)
+            elif mode == "animate":
+                frames = generation.make_animation(settings, save_frames=False, callback=None)
 
-            out_path = "interpolation.mp4" #Path(tempfile.mkdtemp()) / "interpolation.mp4"
-            clip = mpy.ImageSequenceClip(frames, fps=8)
+            out_path = Path(tempfile.mkdtemp()) / "out.mp4"
+            clip = mpy.ImageSequenceClip([np.array(f) for f in frames], fps=8)
             clip.write_videofile(str(out_path))
 
-            yield Path(out_path)
+            return out_path
 
 
