@@ -3,8 +3,10 @@ import sys
 import tempfile
 import random
 import hashlib
+from typing import Iterator
 import moviepy.editor as mpy
 import numpy as np
+
 
 os.environ["TORCH_HOME"] = "/src/.torch"
 os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
@@ -12,16 +14,16 @@ os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
 sys.path.extend([
     "/CLIP"
     "/taming-transformers",
-    "stable-diffusion-dev",
-    "stable-diffusion-dev/eden",
-    "k-diffusion",
-    "pytorch3d-lite",
-    "MiDaS",
-    "AdaBins"
+    "/stable-diffusion-dev",
+    "/stable-diffusion-dev/eden",
+    "/k-diffusion",
+    "/pytorch3d-lite",
+    "/MiDaS",
+    "/AdaBins"
 ])
 
 from settings import StableDiffusionSettings
-from sd import get_model
+from sd import get_model, get_prompt_conditioning
 from utils import get_file_sha256
 import depth
 
@@ -54,7 +56,7 @@ class Predictor(BasePredictor):
         ),
         sampler: str = Input(
             description="Which sampler to use", 
-            efault="klms", choices=["ddim", "plms", "klms" "dpm2", "dpm2_ancestral", "heun", "euler", "euler_ancestral"]
+            default="klms", choices=["ddim", "plms", "klms" "dpm2", "dpm2_ancestral", "heun", "euler", "euler_ancestral"]
         ),
         steps: int = Input(
             description="Diffusion steps", 
@@ -71,10 +73,6 @@ class Predictor(BasePredictor):
         # static_threshold: float = None
 
         # Init image and mask
-        init_image_strength: float = Input(
-            description="Strength of initial image", 
-            ge=0.0, le=1.0, default=0.0
-        ),
         init_image_file: Path = Input(
             description="Load initial image from file", 
             default=None
@@ -83,9 +81,9 @@ class Predictor(BasePredictor):
             description="Load initial image from base64 string", 
             default=None
         ),
-        strength : float = Input(
-            description="Strength of initial image"
-            ge=0.0, le=20.0, default=7.0,
+        init_image_strength: float = Input(
+            description="Strength of initial image", 
+            ge=0.0, le=1.0, default=0.0
         ),
         mask_image_file: Path = Input(
             description="Load mask image from file", 
@@ -95,7 +93,7 @@ class Predictor(BasePredictor):
             description="Load mask image from base64 string", 
             default=None
         ),
-        invert_mask: bool = Input(
+        mask_invert: bool = Input(
             description="Invert mask", 
             default=False
         ),
@@ -117,7 +115,7 @@ class Predictor(BasePredictor):
 
         # Interpolate mode
         interpolation_texts: str = Input(
-            description="Interpolation texts (mode==interpolate)"
+            description="Interpolation texts (mode==interpolate)",
             default=None
         ),
         interpolation_seeds: str = Input(
@@ -125,7 +123,7 @@ class Predictor(BasePredictor):
             default=None
         ),
         n_interpolate: int = Input(
-            description="Number of frames between each interpolated video (mode==interpolate)"
+            description="Number of frames between each interpolated video (mode==interpolate)",
             ge=0, le=32, default=16
         ),
         loop: bool = Input(
@@ -143,7 +141,7 @@ class Predictor(BasePredictor):
             default='2D', choices= ['2D', '3D', 'Video Input']
         ),
         init_video: Path = Input(
-            description="Initial video file (mode==animate)"
+            description="Initial video file (mode==animate)",
             default=None
         ),
         extract_nth_frame: int = Input(
@@ -151,15 +149,15 @@ class Predictor(BasePredictor):
             ge=1, le=10, default=1
         ),
         turbo_steps: int = Input(
-            description="Turbo steps (mode==animate)"
+            description="Turbo steps (mode==animate)",
             ge=1, le=8, default=3
         ),
         previous_frame_strength: float = Input(
-            description="Strength of previous frame (mode==animate)"
+            description="Strength of previous frame (mode==animate)",
             ge=0.0, le=1.0, default=0.65
         ),
         previous_frame_noise: float = Input(
-            description="How much to noise previous frame (mode==animate)"
+            description="How much to noise previous frame (mode==animate)",
             ge=0.0, le=0.2, default=0.02
         ),
         color_coherence: str = Input(
@@ -167,15 +165,15 @@ class Predictor(BasePredictor):
             default='Match Frame 0 LAB', choices=['None', 'Match Frame 0 HSV', 'Match Frame 0 LAB', 'Match Frame 0 RGB']
         ),
         contrast: float = Input(
-            description="Contrast (mode==animation)"
+            description="Contrast (mode==animation)",
             ge=0.0, le=2.0, default=1.0
         ),
         angle: float = Input(
-            description="Rotation angle (animation_mode==2D)"
+            description="Rotation angle (animation_mode==2D)",
             ge=-2.0, le=2.0, default=0.0
         ),
         zoom: float = Input(
-            description="Zoom (animation_mode==2D)"
+            description="Zoom (animation_mode==2D)",
             ge=0.91, le=1.12, default=1.0
         ),
         translation_x: float = Input(description="Translation X (animation_mode==3D)", ge=-5, le=5, default=0),
@@ -185,15 +183,15 @@ class Predictor(BasePredictor):
         rotation_y: float = Input(description="Rotation U (animation_mode==3D)", ge=-1, le=1, default=0),
         rotation_z: float = Input(description="Rotation Z (animation_mode==3D)", ge=-1, le=1, default=0)
 
-    ) -> Path:
+    ) -> Iterator[Path]:
+
+        import generation
 
         settings = StableDiffusionSettings(
             config = self.config_path,
             ckpt = self.ckpt_path,
             precision= 'autocast',
             half_precision = True,
-
-            mode = mode,
 
             W = width - (width % 64),
             H = height - (height % 64),
@@ -206,14 +204,14 @@ class Predictor(BasePredictor):
             init_image_strength = init_image_strength,
             mask_image_file = mask_image_file,
             mask_image_b64 = mask_image_b64,
-            mask_intert = mask_intert,
+            mask_invert = mask_invert,
 
             text_input = text_input,
             seed = seed,
             n_samples = n_samples,
 
-            interpolation_texts = interpolation_texts.split('|'),
-            interpolation_seeds = [float(i) for i in interpolation_seeds.split('|')],
+            interpolation_texts = interpolation_texts.split('|') if interpolation_texts else None,
+            interpolation_seeds = [float(i) for i in interpolation_seeds.split('|')] if interpolation_seeds else None,
             n_interpolate = n_interpolate,
             loop = loop,
             smooth = smooth,
@@ -234,11 +232,27 @@ class Predictor(BasePredictor):
 
         print(settings)
 
-        final_images = generation.make_images(settings, callback=None)
-        out_path = Path(tempfile.mkdtemp()) / "out.png"
-        final_images[0].save(str(out_path))
 
-        # get_file_sha256(out_path)
+        if mode == "generate":
+            print('generate')
+            final_images = generation.make_images(settings, callback=None)
+            out_path = Path(tempfile.mkdtemp()) / "out.png"
+            final_images[0].save(str(out_path))
+            yield Path(out_path)
 
-        return out_path
-        
+        elif mode == "interpolate":
+            print('interpolate')
+            frames = []
+            for f, frame in enumerate(generation.make_interpolation(settings, save_frames=False, callback=None)):
+                out_path = Path(tempfile.mkdtemp()) / "frame.png"
+                frame.save(str(out_path))
+                frames.append(np.array(frame))
+                yield Path(out_path)
+
+            out_path = "interpolation.mp4" #Path(tempfile.mkdtemp()) / "interpolation.mp4"
+            clip = mpy.ImageSequenceClip(frames, fps=8)
+            clip.write_videofile(str(out_path))
+
+            yield Path(out_path)
+
+
