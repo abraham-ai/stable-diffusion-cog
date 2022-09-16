@@ -34,13 +34,8 @@ build:
     - "moviepy==1.0.3"
 
   pre_install:
-   - git clone https://github.com/deforum/k-diffusion
-   - git clone https://github.com/MSFTserver/pytorch3d-lite.git
-   - git clone https://github.com/isl-org/MiDaS.git
-   - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/CompVis/taming-transformers
    - git clone https://github.com/openai/CLIP
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev
    - pip install -e ./CLIP
    - pip install -e ./taming-transformers
    - mv MiDaS/utils.py MiDaS/midas_utils.py

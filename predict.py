@@ -12,12 +12,12 @@ os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
 sys.path.extend([
     "/CLIP"
     "/taming-transformers",
-    "/stable-diffusion-dev",
-    "/stable-diffusion-dev/eden",
-    "/k-diffusion",
-    "/pytorch3d-lite",
-    "/MiDaS",
-    "/AdaBins"
+    "stable-diffusion-dev",
+    "stable-diffusion-dev/eden",
+    "k-diffusion",
+    "pytorch3d-lite",
+    "MiDaS",
+    "AdaBins"
 ])
 
 from settings import StableDiffusionSettings
