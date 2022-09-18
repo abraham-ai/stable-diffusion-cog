@@ -7,7 +7,6 @@ from typing import Iterator
 import moviepy.editor as mpy
 import numpy as np
 
-fidx = 1
 os.environ["TORCH_HOME"] = "/src/.torch"
 os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
 
@@ -31,6 +30,7 @@ from cog import BasePredictor, Input, Path
 
 
 class Predictor(BasePredictor):
+
     def setup(self):
         import generation
         self.config_path = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
@@ -40,8 +40,8 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-
-        # Universal
+        
+        # Universal args
         mode: str = Input(
             description="Mode", default="generate",
             choices=["generate", "interpolate", "animate"]
@@ -183,7 +183,7 @@ class Predictor(BasePredictor):
         rotation_y: float = Input(description="Rotation U (animation_mode==3D)", ge=-1, le=1, default=0),
         rotation_z: float = Input(description="Rotation Z (animation_mode==3D)", ge=-1, le=1, default=0)
 
-    ) -> Path:
+    ) -> Iterator[Path]:
 
         import generation
 
@@ -233,22 +233,28 @@ class Predictor(BasePredictor):
         )
 
         if mode == "generate":
-            final_images = generation.make_images(settings, callback=None)
+            final_images = generation.make_images(settings)
             out_path = Path(tempfile.mkdtemp()) / "out.png"
             final_images[0].save(str(out_path))
-            return out_path
+            yield out_path
 
         else:
             
             if mode == "interpolate":
-                frames = generation.make_interpolation(settings, save_frames=False, callback=None)
+                generator = generation.make_interpolation(settings)
+            
             elif mode == "animate":
-                frames = generation.make_animation(settings, save_frames=False, callback=None)
+                generator = generation.make_animation(settings)
+
+            frames = []
+            for frame in generator:
+                out_path = Path(tempfile.mkdtemp()) / "frame.png"
+                frame.save(out_path)
+                frames.append(np.array(frame))
+                yield out_path
 
             out_path = Path(tempfile.mkdtemp()) / "out.mp4"
-            clip = mpy.ImageSequenceClip([np.array(f) for f in frames], fps=8)
+            clip = mpy.ImageSequenceClip(frames, fps=8)
             clip.write_videofile(str(out_path))
 
-            return out_path
-
-
+            yield out_path

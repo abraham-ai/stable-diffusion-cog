@@ -1,0 +1,6 @@
+__pycache__/
+.cog/
+.huggingface/
+.torch/
+*.pt
+*.ckpt

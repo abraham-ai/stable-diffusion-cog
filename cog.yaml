@@ -1,5 +1,3 @@
-# Reference: https://github.com/replicate/cog/blob/main/docs/yaml.md
-
 build:
   gpu: true
   cuda: "11.6.2"
@@ -44,7 +42,7 @@ build:
    - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/isl-org/MiDaS.git
    - mv MiDaS/utils.py MiDaS/midas_utils.py
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 9
+   - git clone -b yield https://github.com/abraham-ai/stable-diffusion-dev
 
 predict: "predict.py:Predictor"
 
