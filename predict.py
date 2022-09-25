@@ -113,6 +113,12 @@ class Predictor(BasePredictor):
             ge=1, le=4, default=1
         ),
 
+        # Interpolate / Animate mode
+        n_frames: int = Input(
+            description="Total number of frames (mode==interpolate/animate)",
+            ge=0, le=1000, default=50
+        ),
+
         # Interpolate mode
         interpolation_texts: str = Input(
             description="Interpolation texts (mode==interpolate)",
@@ -121,10 +127,6 @@ class Predictor(BasePredictor):
         interpolation_seeds: str = Input(
             description="Seeds for interpolated texts (mode==interpolate)",
             default=None
-        ),
-        n_interpolate: int = Input(
-            description="Number of frames between each interpolated video (mode==interpolate)",
-            ge=0, le=32, default=16
         ),
         loop: bool = Input(
             description="Loops (mode==interpolate)",
@@ -212,9 +214,9 @@ class Predictor(BasePredictor):
             seed = seed,
             n_samples = n_samples,
 
+            n_frames = n_frames,
             interpolation_texts = interpolation_texts.split('|') if interpolation_texts else None,
             interpolation_seeds = [float(i) for i in interpolation_seeds.split('|')] if interpolation_seeds else None,
-            n_interpolate = n_interpolate,
             loop = loop,
             smooth = smooth,
 

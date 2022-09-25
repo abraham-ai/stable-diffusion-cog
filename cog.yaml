@@ -42,7 +42,7 @@ build:
    - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/isl-org/MiDaS.git
    - mv MiDaS/utils.py MiDaS/midas_utils.py
-   - git clone -b yield https://github.com/abraham-ai/stable-diffusion-dev
+   - git clone -b yield https://github.com/abraham-ai/stable-diffusion-dev && echo 12
 
 predict: "predict.py:Predictor"
 
