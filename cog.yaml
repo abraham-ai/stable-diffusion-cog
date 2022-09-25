@@ -31,6 +31,7 @@ build:
     - "lpips==0.1.4"
     - "moviepy==1.0.3"
     - "pandas==1.4.4"
+    - "matplotlib==3.5.3"
 
   pre_install:
    - git clone https://github.com/CompVis/taming-transformers
@@ -42,7 +43,7 @@ build:
    - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/isl-org/MiDaS.git
    - mv MiDaS/utils.py MiDaS/midas_utils.py
-   - git clone -b yield https://github.com/abraham-ai/stable-diffusion-dev && echo 12
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 1234
 
 predict: "predict.py:Predictor"
 

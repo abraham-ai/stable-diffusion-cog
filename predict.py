@@ -46,6 +46,9 @@ class Predictor(BasePredictor):
             description="Mode", default="generate",
             choices=["generate", "interpolate", "animate"]
         ),
+        stream: bool = Input(
+            description="If video, yield individual results if True", default=False
+        ),
         width: int = Input(
             description="Width", 
             ge=64, le=768, default=512
@@ -253,7 +256,8 @@ class Predictor(BasePredictor):
                 out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
                 frame.save(out_path)
                 frames.append(np.array(frame))
-                yield out_path
+                if stream:
+                    yield out_path
 
             out_path = Path(tempfile.mkdtemp()) / "out.mp4"
             clip = mpy.ImageSequenceClip(frames, fps=8)
