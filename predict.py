@@ -240,7 +240,7 @@ class Predictor(BasePredictor):
         if mode == "generate":
             final_images = generation.make_images(settings)
             out_path = Path(tempfile.mkdtemp()) / "out.jpg"
-            final_images[0].save(str(out_path))
+            final_images[0].save(str(out_path), format='JPEG', subsampling=0, quality=95)
             yield out_path
 
         else:
@@ -254,7 +254,7 @@ class Predictor(BasePredictor):
             frames = []
             for frame in generator:
                 out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
-                frame.save(out_path)
+                frame.save(out_path, format='JPEG', subsampling=0, quality=95)
                 frames.append(np.array(frame))
                 if stream:
                     yield out_path
