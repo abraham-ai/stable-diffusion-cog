@@ -88,7 +88,7 @@ class Predictor(BasePredictor):
             description="Strength of initial image", 
             ge=0.0, le=1.0, default=0.0
         ),
-        init_image_inpaint_mode: float = Input(
+        init_image_inpaint_mode: str = Input(
             description="Inpainting method for pre-processing init_image when it's masked", 
             default="cv2_telea", choices=["mean_fill", "edge_pad", "cv2_telea", "cv2_ns"]
         ),
