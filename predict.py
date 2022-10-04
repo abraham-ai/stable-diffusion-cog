@@ -88,6 +88,10 @@ class Predictor(BasePredictor):
             description="Strength of initial image", 
             ge=0.0, le=1.0, default=0.0
         ),
+        init_image_inpaint_mode: float = Input(
+            description="Inpainting method for pre-processing init_image when it's masked", 
+            default="cv2_telea", choices=["mean_fill", "edge_pad", "cv2_telea", "cv2_ns"]
+        ),
         mask_image_file: Path = Input(
             description="Load mask image from file", 
             default=None
@@ -209,6 +213,7 @@ class Predictor(BasePredictor):
             init_image_file = init_image_file,
             init_image_b64 = init_image_b64,
             init_image_strength = init_image_strength,
+            init_image_inpaint_mode = init_image_inpaint_mode,
             mask_image_file = mask_image_file,
             mask_image_b64 = mask_image_b64,
             mask_invert = mask_invert,
