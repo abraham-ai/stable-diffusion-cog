@@ -250,7 +250,7 @@ class Predictor(BasePredictor):
 
             steps_per_update = stream_every if stream else None
 
-            generator = generation.make_images(args, steps_per_update=steps_per_update)
+            generator = generation.make_images(settings, steps_per_update=steps_per_update)
             
             for frame in generator:
                 out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
