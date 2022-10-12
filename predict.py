@@ -47,7 +47,11 @@ class Predictor(BasePredictor):
             choices=["generate", "interpolate", "animate"]
         ),
         stream: bool = Input(
-            description="If video, yield individual results if True", default=False
+            description="yield individual results if True", default=False
+        ),
+        stream_every: int = Input(
+            description="for mode generate, how many steps per update to stream (steam must be set to True)", 
+            default=1, ge=1, le=25
         ),
         width: int = Input(
             description="Width", 
@@ -243,11 +247,16 @@ class Predictor(BasePredictor):
         )
 
         if mode == "generate":
-            final_images = generation.make_images(settings)
-            out_path = Path(tempfile.mkdtemp()) / "out.jpg"
-            final_images[0].save(str(out_path), format='JPEG', subsampling=0, quality=95)
-            yield out_path
 
+            steps_per_update = stream_every if stream else None
+
+            generator = generation.make_images(args, steps_per_update=steps_per_update)
+            
+            for frame in generator:
+                out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
+                frame[0].save(out_path, format='JPEG', subsampling=0, quality=95)
+                yield out_path
+                
         else:
             
             if mode == "interpolate":
