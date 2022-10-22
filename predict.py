@@ -6,7 +6,9 @@ import hashlib
 from typing import Iterator
 import moviepy.editor as mpy
 import numpy as np
+from dotenv import load_dotenv
 
+load_dotenv()
 os.environ["TORCH_HOME"] = "/src/.torch"
 os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
 
@@ -27,7 +29,6 @@ from utils import get_file_sha256
 import depth
 
 from cog import BasePredictor, Input, Path
-
 
 class Predictor(BasePredictor):
 
@@ -139,6 +140,22 @@ class Predictor(BasePredictor):
             description="Seeds for interpolated texts (mode==interpolate)",
             default=None
         ),
+        interpolation_init_images: str = Input(
+            description="Interpolation init images, file paths or urls (mode==interpolate)",
+            default=None
+        ),
+        interpolation_init_images_top_k: int = Input(
+            description="Top K for interpolation_init_images prompts (mode==interpolate)",
+            ge=1, le=10, default=2
+        ),
+        interpolation_init_images_power: float = Input(
+            description="Power for interpolation_init_images prompts (mode==interpolate)",
+            ge=0.0, le=8.0, default=2.5
+        ),
+        interpolation_init_images_min_strength: float = Input(
+            description="Minimum init image strength for interpolation_init_images prompts (mode==interpolate)",
+            ge=0, le=1, default=0.2
+        ),
         loop: bool = Input(
             description="Loops (mode==interpolate)",
             default=True
@@ -229,6 +246,11 @@ class Predictor(BasePredictor):
             n_frames = n_frames,
             interpolation_texts = interpolation_texts.split('|') if interpolation_texts else None,
             interpolation_seeds = [float(i) for i in interpolation_seeds.split('|')] if interpolation_seeds else None,
+            interpolation_init_images = interpolation_init_images.split('|') if interpolation_init_images else None,
+            interpolation_init_images_top_k = interpolation_init_images_top_k,
+            interpolation_init_images_power = interpolation_init_images_power,
+            interpolation_init_images_min_strength = interpolation_init_images_min_strength,
+
             loop = loop,
             smooth = smooth,
 
@@ -252,21 +274,21 @@ class Predictor(BasePredictor):
 
             generator = generation.make_images(settings, steps_per_update=steps_per_update)
             
-            for frame in generator:
+            for frame, t in generator:
                 out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
                 frame[0].save(out_path, format='JPEG', subsampling=0, quality=95)
                 yield out_path
                 
         else:
-            
+
             if mode == "interpolate":
                 generator = generation.make_interpolation(settings)
-            
+                
             elif mode == "animate":
                 generator = generation.make_animation(settings)
 
             frames = []
-            for frame in generator:
+            for frame, t in generator:
                 out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
                 frame.save(out_path, format='JPEG', subsampling=0, quality=95)
                 frames.append(np.array(frame))

@@ -1,12 +1,13 @@
 build:
   gpu: true
   cuda: "11.6.2"
-  python_version: "3.10"
+  python_version: "3.9.5"
 
   system_packages:
     - "libgl1-mesa-glx"
     - "libglib2.0-0"
     - "ffmpeg"
+    - "cmake"
 
   python_packages:
     - "scikit-image==0.19.3"
@@ -32,8 +33,13 @@ build:
     - "moviepy==1.0.3"
     - "pandas==1.4.4"
     - "matplotlib==3.5.3"
+    - "autofaiss==2.15.3"
+    - "onnxruntime==1.12.1"
+    - "onnx==1.11.0"
+    - "python-dotenv==0.20.0"
 
   pre_install:
+   - pip install git+https://github.com/abraham-ai/eden
    - git clone https://github.com/CompVis/taming-transformers
    - git clone https://github.com/openai/CLIP
    - pip install -e ./CLIP
@@ -43,7 +49,7 @@ build:
    - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/isl-org/MiDaS.git
    - mv MiDaS/utils.py MiDaS/midas_utils.py
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 1234567
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 124
 
 predict: "predict.py:Predictor"
 
