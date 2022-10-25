@@ -35,7 +35,7 @@ class Predictor(BasePredictor):
     def setup(self):
         import generation
         self.config_path = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
-        self.ckpt_path = "./sd-v1-4.ckpt"
+        self.ckpt_path = "./v1-5-pruned-emaonly.ckpt" #"./sd-v1-4.ckpt"
         self.model = get_model(self.config_path, self.ckpt_path, True)
         depth.setup_depth_models('.')
 
