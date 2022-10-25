@@ -49,7 +49,7 @@ build:
    - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/isl-org/MiDaS.git
    - mv MiDaS/utils.py MiDaS/midas_utils.py
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 124
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 12456
 
 predict: "predict.py:Predictor"
 

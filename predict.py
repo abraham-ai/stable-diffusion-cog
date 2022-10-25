@@ -156,6 +156,10 @@ class Predictor(BasePredictor):
             description="Minimum init image strength for interpolation_init_images prompts (mode==interpolate)",
             ge=0, le=1, default=0.2
         ),
+        scale_modulation: float = Input(
+            description="Scale modulation amplitude for interpolation (mode==interpolate)",
+            ge=0.0, le=1/0, default=0.2
+        ),
         loop: bool = Input(
             description="Loops (mode==interpolate)",
             default=True
@@ -251,6 +255,7 @@ class Predictor(BasePredictor):
             interpolation_init_images_power = interpolation_init_images_power,
             interpolation_init_images_min_strength = interpolation_init_images_min_strength,
 
+            scale_modulation = scale_modulation,
             loop = loop,
             smooth = smooth,
 
