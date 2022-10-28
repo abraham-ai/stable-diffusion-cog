@@ -158,7 +158,7 @@ class Predictor(BasePredictor):
         ),
         scale_modulation: float = Input(
             description="Scale modulation amplitude for interpolation (mode==interpolate)",
-            ge=0.0, le=1/0, default=0.2
+            ge=0.0, le=10, default=0.0
         ),
         loop: bool = Input(
             description="Loops (mode==interpolate)",
