@@ -61,11 +61,11 @@ class Predictor(BasePredictor):
         ),
         width: int = Input(
             description="Width", 
-            ge=64, le=768, default=512
+            ge=64, le=1600, default=512
         ),
         height: int = Input(
             description="Height", 
-            ge=64, le=768, default=512
+            ge=64, le=1600, default=512
         ),
         sampler: str = Input(
             description="Which sampler to use", 
