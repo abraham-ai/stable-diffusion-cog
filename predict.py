@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 os.environ["TORCH_HOME"] = "/src/.torch"
-os.environ['TRANSFORMERS_CACHE'] = '/src/.huggingface/'
+os.environ["TRANSFORMERS_CACHE"] = "/src/.huggingface/"
 
 sys.path.extend([
     "/CLIP"
@@ -26,23 +26,25 @@ sys.path.extend([
 
 from settings import StableDiffusionSettings
 from sd import get_model, get_prompt_conditioning
-from utils import get_file_sha256
 import depth
-
 import film
+import utils
+
+from cog import BasePredictor, Input, Path
 
 film.FILM_MODEL_PATH = "/src/film_models/film_net/Style/saved_model"
 
-from cog import BasePredictor, Input, Path
+CONFIG_PATH = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
+CKPT_PATH = "./v1-5-pruned-emaonly.ckpt"
 
 class Predictor(BasePredictor):
 
     def setup(self):
         import generation
-        self.config_path = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
-        self.ckpt_path = "./v1-5-pruned-emaonly.ckpt"
+        self.config_path = CONFIG_PATH
+        self.ckpt_path = CKPT_PATH
         self.model = get_model(self.config_path, self.ckpt_path, True)
-        depth.setup_depth_models('.')
+        depth.setup_depth_models(".")
 
     def predict(
         self,
@@ -86,8 +88,8 @@ class Predictor(BasePredictor):
         # static_threshold: float = None
 
         # Init image and mask
-        init_image_file: Path = Input(
-            description="Load initial image from file", 
+        init_image_file: str = Input(
+            description="Load initial image from file or url", 
             default=None
         ),
         init_image_b64: str = Input(
@@ -153,10 +155,6 @@ class Predictor(BasePredictor):
             description="Use clip_search to get prompts for the init images, if false use manual interpolation_texts (mode==interpolate)",
             default=False
         ),
-        interpolation_init_images_blend_mode: str = Input(
-            description="Blend mode for init images (mode==interpolate)",
-            default="blend", choices=["blend", "film"]
-        ),
         interpolation_init_images_top_k: int = Input(
             description="Top K for interpolation_init_images prompts (mode==interpolate)",
             ge=1, le=10, default=2
@@ -181,9 +179,13 @@ class Predictor(BasePredictor):
             description="Smooth (mode==interpolate)",
             default=False
         ),
-        film: bool = Input(
-            description="Smooth final frames using FILM making 2x as long (mode==interpolate or animate)",
-            default=False
+        n_film: int = Input(
+            description="Number of times to smooth final frames with FILM (default is 0) (mode==interpolate or animate)",
+            default=0, ge=0, le=4
+        ),
+        fps: int = Input(
+            description="Frames per second (mode==interpolate or animate)",
+            default=12, ge=1, le=60
         ),
         
         # Animation mode
@@ -242,7 +244,7 @@ class Predictor(BasePredictor):
         interpolation_seeds = [float(i) for i in interpolation_seeds.split('|')] if interpolation_seeds else None
         interpolation_init_images = interpolation_init_images.split('|') if interpolation_init_images else None
 
-        settings = StableDiffusionSettings(
+        args = StableDiffusionSettings(
             config = self.config_path,
             ckpt = self.ckpt_path,
             precision= 'autocast',
@@ -272,7 +274,6 @@ class Predictor(BasePredictor):
             interpolation_seeds = interpolation_seeds,
             interpolation_init_images = interpolation_init_images,
             interpolation_init_images_use_img2txt = interpolation_init_images_use_img2txt,
-            interpolation_init_images_blend_mode = interpolation_init_images_blend_mode,
             interpolation_init_images_top_k = interpolation_init_images_top_k,
             interpolation_init_images_power = interpolation_init_images_power,
             interpolation_init_images_min_strength = interpolation_init_images_min_strength,
@@ -281,7 +282,8 @@ class Predictor(BasePredictor):
             scale_modulation = scale_modulation,
             loop = loop,
             smooth = smooth,
-            film = film,
+            n_film = n_film,
+            fps = fps,
             
             animation_mode = animation_mode,
             color_coherence = None if color_coherence=='None' else color_coherence,
@@ -297,47 +299,42 @@ class Predictor(BasePredictor):
             rotation = [rotation_x, rotation_y, rotation_z]
         )
 
+        out_dir = Path(tempfile.mkdtemp())
+
         if mode == "generate":
 
             steps_per_update = stream_every if stream else None
 
-            generator = generation.make_images(settings, steps_per_update=steps_per_update)
+            generator = generation.make_images(args, steps_per_update=steps_per_update)
             
             for frame, t in generator:
-                out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
+                out_path = out_dir / f"frame_{t:016}.jpg"
                 frame[0].save(out_path, format='JPEG', subsampling=0, quality=95)
                 yield out_path
                 
         else:
 
             if mode == "interpolate":
-                generator = generation.make_interpolation(settings)
+                generator = generation.make_interpolation(args)
                 
             elif mode == "animate":
-                generator = generation.make_animation(settings)
+                generator = generation.make_animation(args)
 
-            frames, ts = [], []
-
-            for frame, t in generator:
-                print(f"received frame at t={t}")
-                out_path = Path(tempfile.mkdtemp()) / "frame.jpg"
-                frame.save(out_path, format='JPEG', subsampling=0, quality=95)
-                frames.append(np.array(frame))
-                ts.append(t)
-                
+            # generate frames
+            for frame, t_raw in generator:
+                out_path = out_dir / ("frame_%0.16f.jpg" % t_raw)
+                frame.save(out_path, format='JPEG', subsampling=0, quality=95)                
                 if stream:
                     yield out_path
 
-            if smooth:
-                print(f"smoothing {ts}")
-                frames = [frames[t] for t in np.argsort(ts)]
+            # run FILM
+            if args.n_film > 0:
+                film.interpolate_FILM(str(out_dir), n_film)
+                out_dir = out_dir / "interpolated_frames"
 
-            if loop and len(interpolation_seeds) == 2:
-                print(f"looping")
-                frames += frames[::-1]
-
-            out_path = Path(tempfile.mkdtemp()) / "out.mp4"
-            clip = mpy.ImageSequenceClip(frames, fps=8)
-            clip.write_videofile(str(out_path))
+            # save video
+            loop = (args.loop and len(args.interpolation_seeds) == 2)
+            out_path = out_dir / "out.mp4"
+            utils.write_video(out_dir, str(out_path), loop=loop, fps=args.fps)
 
             yield out_path

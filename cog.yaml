@@ -49,10 +49,9 @@ build:
    - git clone https://github.com/genekogan/AdaBins
    - git clone https://github.com/isl-org/MiDaS.git
    - mv MiDaS/utils.py MiDaS/midas_utils.py
-   - git clone https://github.com/google-research/frame-interpolation
+   - git clone https://github.com/abraham-ai/frame-interpolation
    - pip install -r ./frame-interpolation/requirements.txt 
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 12456789
-
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 1245678901223
 
 predict: "predict.py:Predictor"
 
