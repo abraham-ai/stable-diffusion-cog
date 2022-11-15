@@ -100,7 +100,7 @@ class Predictor(BasePredictor):
             description="Inpainting method for pre-processing init_image when it's masked", 
             default="cv2_telea", choices=["mean_fill", "edge_pad", "cv2_telea", "cv2_ns"]
         ),
-        mask_image_data: Path = Input(
+        mask_image_data: str = Input(
             description="Load mask image from file, url, or base64 string", 
             default=None
         ),
