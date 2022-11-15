@@ -88,12 +88,8 @@ class Predictor(BasePredictor):
         # static_threshold: float = None
 
         # Init image and mask
-        init_image_file: str = Input(
-            description="Load initial image from file or url", 
-            default=None
-        ),
-        init_image_b64: str = Input(
-            description="Load initial image from base64 string", 
+        init_image_data: str = Input(
+            description="Load initial image from file, url, or base64 string", 
             default=None
         ),
         init_image_strength: float = Input(
@@ -104,12 +100,8 @@ class Predictor(BasePredictor):
             description="Inpainting method for pre-processing init_image when it's masked", 
             default="cv2_telea", choices=["mean_fill", "edge_pad", "cv2_telea", "cv2_ns"]
         ),
-        mask_image_file: Path = Input(
-            description="Load mask image from file", 
-            default=None
-        ),
-        mask_image_b64: str = Input(
-            description="Load mask image from base64 string", 
+        mask_image_data: Path = Input(
+            description="Load mask image from file, url, or base64 string", 
             default=None
         ),
         mask_invert: bool = Input(
@@ -258,12 +250,10 @@ class Predictor(BasePredictor):
             steps = steps,
             scale = scale,
 
-            init_image_file = init_image_file,
-            init_image_b64 = init_image_b64,
+            init_image_data = init_image_data,
             init_image_strength = init_image_strength,
             init_image_inpaint_mode = init_image_inpaint_mode,
-            mask_image_file = mask_image_file,
-            mask_image_b64 = mask_image_b64,
+            mask_image_data = mask_image_data,
             mask_invert = mask_invert,
 
             text_input = text_input,
