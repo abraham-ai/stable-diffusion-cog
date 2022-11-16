@@ -274,7 +274,12 @@ class Predictor(BasePredictor):
             smooth = smooth,
             n_film = n_film,
             fps = fps,
-            
+
+            aesthetic_target = None, # None means we'll use the init_images as target
+            aesthetic_steps = 10,
+            aesthetic_lr = 0.0001,
+            ag_L2_normalization_constant = 0.25, # for real2real, only 
+
             animation_mode = animation_mode,
             color_coherence = None if color_coherence=='None' else color_coherence,
             init_video = init_video,
