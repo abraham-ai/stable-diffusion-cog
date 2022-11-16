@@ -51,7 +51,7 @@ build:
    - mv MiDaS/utils.py MiDaS/midas_utils.py
    - git clone https://github.com/abraham-ai/frame-interpolation
    - pip install -r ./frame-interpolation/requirements.txt 
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 124567890122341
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 12456789012234123
 
 predict: "predict.py:Predictor"
 
