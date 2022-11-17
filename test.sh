@@ -1,0 +1,1 @@
+cog predict -i mode=interpolate -i text_input="real2real" -i n_frames=30 -i interpolation_seeds="1|2" -i interpolation_init_images="https://i.imgur.com/PUKWFxq.jpg|https://i.imgur.com/j536OKv.jpg" -i seed=3 -i width=512 -i height=512 -i interpolation_init_images_use_img2txt=1
