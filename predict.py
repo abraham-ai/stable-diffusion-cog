@@ -36,6 +36,7 @@ film.FILM_MODEL_PATH = "/src/film_models/film_net/Style/saved_model"
 
 CONFIG_PATH = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
 CKPT_PATH = "./v1-5-pruned-emaonly.ckpt"
+HALF_PRECISION = True
 
 class Predictor(BasePredictor):
 
@@ -43,7 +44,8 @@ class Predictor(BasePredictor):
         import generation
         self.config_path = CONFIG_PATH
         self.ckpt_path = CKPT_PATH
-        self.model = get_model(self.config_path, self.ckpt_path, True)
+        self.half_precision = HALF_PRECISION
+        self.model = get_model(self.config_path, self.ckpt_path, self.half_precision)
         depth.setup_depth_models(".")
 
     def predict(
@@ -240,7 +242,7 @@ class Predictor(BasePredictor):
             config = self.config_path,
             ckpt = self.ckpt_path,
             precision= 'autocast',
-            half_precision = True,
+            half_precision = self.half_precision,
 
             mode = mode,
 
