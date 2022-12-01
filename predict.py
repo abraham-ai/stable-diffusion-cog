@@ -122,6 +122,9 @@ class Predictor(BasePredictor):
         text_input: str = Input(
             description="Text input (mode=generate)",
         ),
+        uc_text_input: str = Input(
+            description="Negative text input (mode=all)",
+        ),
         seed: int = Input(
             description="random seed (mode==generate)", 
             ge=0, le=1e8, default=13
@@ -265,6 +268,7 @@ class Predictor(BasePredictor):
             mask_invert = mask_invert,
 
             text_input = text_input,
+            uc_text_input = uc_text_input,
             seed = seed,
             n_samples = n_samples,
 
