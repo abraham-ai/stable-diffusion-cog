@@ -22,13 +22,14 @@ sys.path.extend([
     "/MiDaS",
     "/AdaBins",
     "/frame-interpolation"
+    "/clip-interrogator"
 ])
 
 from settings import StableDiffusionSettings
 from sd import get_model, get_prompt_conditioning
-import depth
+#import depth
 import film
-import utils
+import eden_utils
 
 from cog import BasePredictor, Input, Path
 
@@ -46,7 +47,7 @@ class Predictor(BasePredictor):
         self.ckpt_path = CKPT_PATH
         self.half_precision = HALF_PRECISION
         self.model = get_model(self.config_path, self.ckpt_path, self.half_precision)
-        depth.setup_depth_models(".")
+        #depth.setup_depth_models(".")
 
     def predict(
         self,
@@ -54,7 +55,7 @@ class Predictor(BasePredictor):
         # Universal args
         mode: str = Input(
             description="Mode", default="generate",
-            choices=["generate", "interpolate", "animate"]
+            choices=["generate", "remix", "interpolate", "animate", "interrogate"]
         ),
         stream: bool = Input(
             description="yield individual results if True", default=False
@@ -77,17 +78,21 @@ class Predictor(BasePredictor):
         ),
         steps: int = Input(
             description="Diffusion steps", 
-            ge=10, le=200, default=50
+            ge=0, le=200, default=60
         ),
         scale: float = Input(
             description="Text conditioning scale", 
-            ge=0, le=20, default=8.0
+            ge=0, le=32, default=8.0
         ),
         # ddim_eta: float = 0.0
         # C: int = 4
         # f: int = 8   
         # dynamic_threshold: float = None
         # static_threshold: float = None
+        upscale_f: int = Input(
+            description="Upscaling resolution",
+            default = 1, choices=[1, 2]
+        ),
 
         # Init image and mask
         init_image_data: str = Input(
@@ -129,7 +134,7 @@ class Predictor(BasePredictor):
         # Interpolate / Animate mode
         n_frames: int = Input(
             description="Total number of frames (mode==interpolate/animate)",
-            ge=0, le=1000, default=50
+            ge=0, le=100, default=50
         ),
 
         # Interpolate mode
@@ -175,7 +180,7 @@ class Predictor(BasePredictor):
         ),
         n_film: int = Input(
             description="Number of times to smooth final frames with FILM (default is 0) (mode==interpolate or animate)",
-            default=0, ge=0, le=4
+            default=0, ge=0, le=2
         ),
         fps: int = Input(
             description="Frames per second (mode==interpolate or animate)",
@@ -251,6 +256,7 @@ class Predictor(BasePredictor):
             sampler = sampler,
             steps = steps,
             scale = scale,
+            upscale_f = float(upscale_f),
 
             init_image_data = init_image_data,
             init_image_strength = init_image_strength,
@@ -296,18 +302,26 @@ class Predictor(BasePredictor):
             rotation = [rotation_x, rotation_y, rotation_z]
         )
 
+        print(args)
+
         out_dir = Path(tempfile.mkdtemp())
 
-        if mode == "generate":
+        if mode == "interrogate":
+            # TODO: implement interrogator
+            #captions = generation.interrogate(args)
+            pass
+
+        elif mode == "generate" or mode == "remix":
 
             steps_per_update = stream_every if stream else None
 
             generator = generation.make_images(args, steps_per_update=steps_per_update)
             
-            for frame, t in generator:
-                out_path = out_dir / f"frame_{t:016}.jpg"
-                frame[0].save(out_path, format='JPEG', subsampling=0, quality=95)
-                yield out_path
+            for frames, t in generator:                
+                for f, frame in enumerate(frames):
+                    out_path = out_dir / f"frame_{f:02}_{t:016}.jpg"
+                    frame.save(out_path, format='JPEG', subsampling=0, quality=95)
+                    yield out_path
                 
         else:
 
@@ -332,6 +346,6 @@ class Predictor(BasePredictor):
             # save video
             loop = (args.loop and len(args.interpolation_seeds) == 2)
             out_path = out_dir / "out.mp4"
-            utils.write_video(out_dir, str(out_path), loop=loop, fps=args.fps)
+            eden_utils.write_video(out_dir, str(out_path), loop=loop, fps=args.fps)
 
             yield out_path

@@ -37,6 +37,7 @@ build:
     - "onnxruntime==1.12.1"
     - "onnx==1.11.0"
     - "python-dotenv==0.20.0"
+    - "open_clip_torch==2.7.0"
 
   pre_install:
    - pip install git+https://github.com/abraham-ai/eden
@@ -45,13 +46,16 @@ build:
    - pip install -e ./CLIP
    - pip install -e ./taming-transformers
    - git clone https://github.com/deforum/k-diffusion
-   - git clone https://github.com/MSFTserver/pytorch3d-lite.git
+   - git clone https://github.com/MSFTserver/pytorch3d-lite
    - git clone https://github.com/genekogan/AdaBins
-   - git clone https://github.com/isl-org/MiDaS.git
+   - git clone https://github.com/isl-org/MiDaS
    - mv MiDaS/utils.py MiDaS/midas_utils.py
    - git clone https://github.com/abraham-ai/frame-interpolation
    - pip install -r ./frame-interpolation/requirements.txt 
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 124567890122341234
+   - git clone https://github.com/pharmapsychotic/BLIP
+   - pip install -e ./BLIP
+   - git clone https://github.com/pharmapsychotic/clip-interrogator
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 3
 
 predict: "predict.py:Predictor"
 
