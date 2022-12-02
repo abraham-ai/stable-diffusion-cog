@@ -122,7 +122,7 @@ class Predictor(BasePredictor):
         text_input: str = Input(
             description="Text input (mode=generate)",
         ),
-        uc_text_input: str = Input(
+        uc_text: str = Input(
             description="Negative text input (mode=all)",
         ),
         seed: int = Input(
@@ -268,7 +268,7 @@ class Predictor(BasePredictor):
             mask_invert = mask_invert,
 
             text_input = text_input,
-            uc_text_input = uc_text_input,
+            uc_text = uc_text,
             seed = seed,
             n_samples = n_samples,
 
@@ -326,7 +326,9 @@ class Predictor(BasePredictor):
                     out_path = out_dir / f"frame_{f:02}_{t:016}.jpg"
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
                     yield out_path
-                
+            
+            yield out_path
+
         else:
 
             if mode == "interpolate":
