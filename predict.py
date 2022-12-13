@@ -331,7 +331,7 @@ class Predictor(BasePredictor):
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
                     yield out_path
             
-            return out_path
+            yield out_path
 
         else:
 
@@ -357,4 +357,4 @@ class Predictor(BasePredictor):
             loop = (args.loop and len(args.interpolation_seeds) == 2)
             out_path = out_dir / "out.mp4"
             eden_utils.write_video(out_dir, str(out_path), loop=loop, fps=args.fps)
-            return out_path
+            yield out_path
