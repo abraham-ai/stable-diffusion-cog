@@ -44,6 +44,7 @@ class Predictor(BasePredictor):
     def setup(self):
         import generation
         generation.MODELS_PATH = '/src/models'
+        generation.CLIP_INTERROGATOR_MODEL_PATH = '/src/cache'
         self.config_path = CONFIG_PATH
         self.ckpt_path = CKPT_PATH
         self.half_precision = HALF_PRECISION
