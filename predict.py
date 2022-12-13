@@ -33,16 +33,17 @@ import eden_utils
 
 from cog import BasePredictor, Input, Path
 
-film.FILM_MODEL_PATH = "/src/film_models/film_net/Style/saved_model"
+film.FILM_MODEL_PATH = "/src/models/film/film_net/Style/saved_model"
 
 CONFIG_PATH = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
-CKPT_PATH = "./v1-5-pruned-emaonly.ckpt"
+CKPT_PATH = "/src/models/v1-5-pruned-emaonly.ckpt"
 HALF_PRECISION = True
 
 class Predictor(BasePredictor):
 
     def setup(self):
         import generation
+        generation.MODELS_PATH = '/src/models'
         self.config_path = CONFIG_PATH
         self.ckpt_path = CKPT_PATH
         self.half_precision = HALF_PRECISION
@@ -124,6 +125,7 @@ class Predictor(BasePredictor):
         ),
         uc_text: str = Input(
             description="Negative text input (mode=all)",
+            default=""
         ),
         seed: int = Input(
             description="random seed (mode==generate)", 
@@ -241,7 +243,7 @@ class Predictor(BasePredictor):
     ) -> Iterator[Path]:
 
         import generation
-
+        
         interpolation_texts = interpolation_texts.split('|') if interpolation_texts else None
         interpolation_seeds = [float(i) for i in interpolation_seeds.split('|')] if interpolation_seeds else None
         interpolation_init_images = interpolation_init_images.split('|') if interpolation_init_images else None
@@ -306,6 +308,7 @@ class Predictor(BasePredictor):
             rotation = [rotation_x, rotation_y, rotation_z]
         )
 
+        print("========= Run Predict =========")
         print(args)
 
         out_dir = Path(tempfile.mkdtemp())
@@ -327,7 +330,7 @@ class Predictor(BasePredictor):
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
                     yield out_path
             
-            yield out_path
+            return out_path
 
         else:
 
@@ -353,5 +356,4 @@ class Predictor(BasePredictor):
             loop = (args.loop and len(args.interpolation_seeds) == 2)
             out_path = out_dir / "out.mp4"
             eden_utils.write_video(out_dir, str(out_path), loop=loop, fps=args.fps)
-
-            yield out_path
+            return out_path

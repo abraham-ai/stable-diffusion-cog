@@ -1,0 +1,1 @@
+cog predict -i mode=interpolate -i text_input="lerp" -i interpolation_seeds="5|8" -i interpolation_texts="hello|world" -i seed=3 -i width=512 -i height=512 -i n_film=0 -i n_frames=5 -i smooth=1 -i loop=1
