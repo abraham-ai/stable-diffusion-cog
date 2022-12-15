@@ -126,7 +126,7 @@ class Predictor(BasePredictor):
         ),
         uc_text: str = Input(
             description="Negative text input (mode=all)",
-            default=""
+            default="poorly drawn face, ugly, tiling, out of frame, extra limbs, disfigured, deformed body, blurry, blurred, watermark, text, grainy, signature, cut off, draft"
         ),
         seed: int = Input(
             description="random seed (mode==generate)", 
