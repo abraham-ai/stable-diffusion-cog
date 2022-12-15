@@ -122,10 +122,10 @@ class Predictor(BasePredictor):
 
         # Generate mode
         text_input: str = Input(
-            description="Text input (mode=generate)",
+            description="Text input (mode==generate)",
         ),
         uc_text: str = Input(
-            description="Negative text input (mode=all)",
+            description="Negative text input (mode==all)",
             default="poorly drawn face, ugly, tiling, out of frame, extra limbs, disfigured, deformed body, blurry, blurred, watermark, text, grainy, signature, cut off, draft"
         ),
         seed: int = Input(

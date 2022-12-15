@@ -55,7 +55,7 @@ build:
    - git clone https://github.com/pharmapsychotic/BLIP
    - pip install -e ./BLIP
    - git clone https://github.com/pharmapsychotic/clip-interrogator
-   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 12345678
+   - git clone https://github.com/abraham-ai/stable-diffusion-dev && echo 1234567890
 
 predict: "predict.py:Predictor"
 
