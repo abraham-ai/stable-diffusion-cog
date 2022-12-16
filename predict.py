@@ -309,7 +309,6 @@ class Predictor(BasePredictor):
             rotation = [rotation_x, rotation_y, rotation_z]
         )
 
-        print("========= Run Predict =========")
         print(args)
 
         out_dir = Path(tempfile.mkdtemp())
