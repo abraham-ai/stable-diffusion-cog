@@ -130,7 +130,7 @@ class Predictor(BasePredictor):
         ),
         seed: int = Input(
             description="random seed (mode==generate)", 
-            ge=0, le=1e8, default=13
+            ge=0, le=1e10, default=13
         ),
         n_samples: int = Input(
             description="batch size (mode==generate)",
@@ -175,6 +175,10 @@ class Predictor(BasePredictor):
         scale_modulation: float = Input(
             description="Scale modulation amplitude for interpolation (mode==interpolate)",
             ge=0.0, le=10, default=0.0
+        ),
+        latent_smoothing_std: float = Input(
+            description="Sigma of gaussian kernel for smoothing latents, where 1.0 is the width between two images (mode==interpolate)",
+            ge=0.0, le=1.0, default=0.01
         ),
         loop: bool = Input(
             description="Loops (mode==interpolate)",
@@ -285,6 +289,7 @@ class Predictor(BasePredictor):
 
             n_frames = n_frames,
             scale_modulation = scale_modulation,
+            latent_smoothing_std = latent_smoothing_std,
             loop = loop,
             smooth = smooth,
             n_film = n_film,
