@@ -31,13 +31,19 @@ from sd import get_model, get_prompt_conditioning
 import film
 import eden_utils
 
-from cog import BasePredictor, Input, Path
+from cog import BasePredictor, BaseModel, File, Input, Path
 
 film.FILM_MODEL_PATH = "/src/models/film/film_net/Style/saved_model"
 
 CONFIG_PATH = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
 CKPT_PATH = "/src/models/v1-5-pruned-emaonly.ckpt"
 HALF_PRECISION = True
+
+
+class Output(BaseModel):
+    file: Path
+    attributes: str
+
 
 class Predictor(BasePredictor):
 
@@ -178,7 +184,7 @@ class Predictor(BasePredictor):
         ),
         latent_smoothing_std: float = Input(
             description="Sigma of gaussian kernel for smoothing latents, where 1.0 is the width between two images (mode==interpolate)",
-            ge=0.0, le=1.0, default=0.01
+            ge=0.0, le=1.0, default=0.0
         ),
         loop: bool = Input(
             description="Loops (mode==interpolate)",
@@ -245,7 +251,7 @@ class Predictor(BasePredictor):
         rotation_y: float = Input(description="Rotation U (animation_mode==3D)", ge=-1, le=1, default=0),
         rotation_z: float = Input(description="Rotation Z (animation_mode==3D)", ge=-1, le=1, default=0)
 
-    ) -> Iterator[Path]:
+    ) -> Iterator[Output]: #Iterator[Path]:
 
         import generation
         
@@ -319,9 +325,11 @@ class Predictor(BasePredictor):
         out_dir = Path(tempfile.mkdtemp())
 
         if mode == "interrogate":
-            # TODO: implement interrogator
-            #captions = generation.interrogate(args)
-            pass
+            interrogation = generation.interrogate(args)
+            out_path = out_dir / f"interrogation.txt"
+            with open(out_path, 'w') as f:
+                f.write(interrogation)
+            yield Output(file=out_path, attributes="this is a test interrogator")
 
         elif mode == "generate" or mode == "remix":
 
@@ -333,9 +341,11 @@ class Predictor(BasePredictor):
                 for f, frame in enumerate(frames):
                     out_path = out_dir / f"frame_{f:02}_{t:016}.jpg"
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
-                    yield out_path
+                    #yield out_path
+                    yield Output(file=out_path, attributes="this is a test gen/remix frame")
             
-            yield out_path
+            #yield out_path
+            yield Output(file=out_path, attributes="this is a test gen/remix final")
 
         else:
 
@@ -350,7 +360,8 @@ class Predictor(BasePredictor):
                 out_path = out_dir / ("frame_%0.16f.jpg" % t_raw)
                 frame.save(out_path, format='JPEG', subsampling=0, quality=95)                
                 if stream:
-                    yield out_path
+                    #yield out_path
+                    yield Output(file=out_path, attributes="this is a test interp frame")
 
             # run FILM
             if args.n_film > 0:
@@ -361,4 +372,5 @@ class Predictor(BasePredictor):
             loop = (args.loop and len(args.interpolation_seeds) == 2)
             out_path = out_dir / "out.mp4"
             eden_utils.write_video(out_dir, str(out_path), loop=loop, fps=args.fps)
-            yield out_path
+            #yield out_path
+            yield Output(file=out_path, attributes="this is a test interp final")

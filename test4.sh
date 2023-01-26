@@ -1,0 +1,1 @@
+cog predict -i mode=interrogate -i text_input="interrogate" -i init_image_data="https://generations.krea.ai/images/3cd0b8a8-34e5-4647-9217-1dc03a886b6a.webp"

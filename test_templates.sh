@@ -1,0 +1,26 @@
+cog predict -i mode=interpolate \
+    -i text_input="real2real" \
+    -i width=576 \
+    -i height=576 \
+    -i sampler="klms" \
+    -i steps=60 \
+    -i scale=10.67825555919326 \
+    -i uc_text="poorly drawn face, ugly, tiling, out of frame, extra limbs, disfigured, deformed body, blurry, blurred, watermark, text, grainy, signature, cut off, draft" \
+    -i seed=1673327261 \
+    -i n_frames=54 \
+    -i loop=1 \
+    -i smooth=1 \
+    -i n_film=1 \
+    -i scale_modulation=0.1 \
+    -i latent_smoothing_std=0.01 \
+    -i interpolation_seeds="8837684|57759846|48790072" \
+    -i interpolation_init_images="https://generations.krea.ai/images/3cd0b8a8-34e5-4647-9217-1dc03a886b6a.webp|https://generations.krea.ai/images/928271c8-5a8e-4861-bd57-d1398e8d9e7a.webp|https://generations.krea.ai/images/865142e2-8963-47fb-bbe9-fbe260271e00.webp" \
+    -i interpolation_init_images_use_img2txt=1 \
+    -i interpolation_init_images_top_k=1 \
+    -i interpolation_init_images_power=3.0 \
+    -i interpolation_init_images_min_strength=0.2 \
+    -i interpolation_init_images_max_strength=1.0 \
+    -i aesthetic_steps=10 \
+    -i aesthetic_lr=0.0001 \
+    -i ag_L2_normalization_constant=0.1
+
