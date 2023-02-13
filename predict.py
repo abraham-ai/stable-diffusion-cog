@@ -15,8 +15,8 @@ os.environ["TRANSFORMERS_CACHE"] = "/src/.huggingface/"
 sys.path.extend([
     "/CLIP"
     "/taming-transformers",
-    "/stable-diffusion-dev",
-    "/stable-diffusion-dev/eden",
+    "eden-stable-diffusion",
+    "eden-stable-diffusion/eden",
     "/k-diffusion",
     "/pytorch3d-lite",
     "/MiDaS",
@@ -35,14 +35,14 @@ from cog import BasePredictor, BaseModel, File, Input, Path
 
 film.FILM_MODEL_PATH = "/src/models/film/film_net/Style/saved_model"
 
-CONFIG_PATH = "/stable-diffusion-dev/configs/stable-diffusion/v1-inference.yaml"
+CONFIG_PATH = "eden-stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
 CKPT_PATH = "/src/models/v1-5-pruned-emaonly.ckpt"
 HALF_PRECISION = True
 
 
-class Output(BaseModel):
+class CogOutput(BaseModel):
     file: Path
-    attributes: str
+    attributes: dict
 
 
 class Predictor(BasePredictor):
@@ -63,7 +63,7 @@ class Predictor(BasePredictor):
         # Universal args
         mode: str = Input(
             description="Mode", default="generate",
-            choices=["generate", "remix", "interpolate", "animate", "interrogate"]
+            choices=["generate", "remix", "interpolate", "real2real", "interrogate"]
         ),
         stream: bool = Input(
             description="yield individual results if True", default=False
@@ -182,10 +182,6 @@ class Predictor(BasePredictor):
             description="Scale modulation amplitude for interpolation (mode==interpolate)",
             ge=0.0, le=10, default=0.0
         ),
-        latent_smoothing_std: float = Input(
-            description="Sigma of gaussian kernel for smoothing latents, where 1.0 is the width between two images (mode==interpolate)",
-            ge=0.0, le=1.0, default=0.0
-        ),
         loop: bool = Input(
             description="Loops (mode==interpolate)",
             default=True
@@ -251,7 +247,7 @@ class Predictor(BasePredictor):
         rotation_y: float = Input(description="Rotation U (animation_mode==3D)", ge=-1, le=1, default=0),
         rotation_z: float = Input(description="Rotation Z (animation_mode==3D)", ge=-1, le=1, default=0)
 
-    ) -> Iterator[Output]: #Iterator[Path]:
+    ) -> Iterator[CogOutput]:
 
         import generation
         
@@ -295,7 +291,6 @@ class Predictor(BasePredictor):
 
             n_frames = n_frames,
             scale_modulation = scale_modulation,
-            latent_smoothing_std = latent_smoothing_std,
             loop = loop,
             smooth = smooth,
             n_film = n_film,
@@ -329,7 +324,8 @@ class Predictor(BasePredictor):
             out_path = out_dir / f"interrogation.txt"
             with open(out_path, 'w') as f:
                 f.write(interrogation)
-            yield Output(file=out_path, attributes="this is a test interrogator")
+            attributes = {'interrogation': interrogation}
+            yield CogOutput(file=out_path, attributes=attributes)
 
         elif mode == "generate" or mode == "remix":
 
@@ -337,31 +333,42 @@ class Predictor(BasePredictor):
 
             generator = generation.make_images(args, steps_per_update=steps_per_update)
             
+            attributes = {}
+
             for frames, t in generator:                
                 for f, frame in enumerate(frames):
                     out_path = out_dir / f"frame_{f:02}_{t:016}.jpg"
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
-                    #yield out_path
-                    yield Output(file=out_path, attributes="this is a test gen/remix frame")
+                    yield CogOutput(file=out_path, attributes=attributes)
             
-            #yield out_path
-            yield Output(file=out_path, attributes="this is a test gen/remix final")
+            if mode == "remix":
+                attributes = {"interrogation": args.text_input}
 
+            yield CogOutput(file=out_path, attributes=attributes)
+            
         else:
 
             if mode == "interpolate":
                 generator = generation.make_interpolation(args)
-                
-            elif mode == "animate":
-                generator = generation.make_animation(args)
+
+            elif mode == "real2real":
+                args.interpolation_init_images_use_img2txt = True
+                generator = generation.make_interpolation(args)
+
+            # elif mode == "animate":
+            #     generator = generation.make_animation(args)
+
+            attributes = {}
+            thumbnail = None
 
             # generate frames
             for frame, t_raw in generator:
                 out_path = out_dir / ("frame_%0.16f.jpg" % t_raw)
-                frame.save(out_path, format='JPEG', subsampling=0, quality=95)                
+                frame.save(out_path, format='JPEG', subsampling=0, quality=95)
+                if 'thumbnail' not in attributes:
+                    attributes["thumbnail"] = str(out_path)
                 if stream:
-                    #yield out_path
-                    yield Output(file=out_path, attributes="this is a test interp frame")
+                    yield CogOutput(file=out_path, attributes=attributes)
 
             # run FILM
             if args.n_film > 0:
@@ -372,5 +379,8 @@ class Predictor(BasePredictor):
             loop = (args.loop and len(args.interpolation_seeds) == 2)
             out_path = out_dir / "out.mp4"
             eden_utils.write_video(out_dir, str(out_path), loop=loop, fps=args.fps)
-            #yield out_path
-            yield Output(file=out_path, attributes="this is a test interp final")
+
+            if mode == "real2real":
+                attributes["interrogation"] = args.interpolation_texts
+
+            yield CogOutput(file=out_path, attributes=attributes)

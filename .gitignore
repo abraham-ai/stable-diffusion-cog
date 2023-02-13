@@ -9,3 +9,4 @@ models/
 .env
 output*
 *.mp4
+eden-stable-diffusion/
