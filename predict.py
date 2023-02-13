@@ -42,6 +42,7 @@ HALF_PRECISION = True
 
 class CogOutput(BaseModel):
     file: Path
+    thumbnail: Path
     attributes: dict
 
 
@@ -325,7 +326,7 @@ class Predictor(BasePredictor):
             with open(out_path, 'w') as f:
                 f.write(interrogation)
             attributes = {'interrogation': interrogation}
-            yield CogOutput(file=out_path, attributes=attributes)
+            yield CogOutput(file=out_path, thumbnail=None, attributes=attributes)
 
         elif mode == "generate" or mode == "remix":
 
@@ -339,12 +340,12 @@ class Predictor(BasePredictor):
                 for f, frame in enumerate(frames):
                     out_path = out_dir / f"frame_{f:02}_{t:016}.jpg"
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
-                    yield CogOutput(file=out_path, attributes=attributes)
+                    yield CogOutput(file=out_path, thumbnail=out_path,attributes=attributes)
             
             if mode == "remix":
                 attributes = {"interrogation": args.text_input}
 
-            yield CogOutput(file=out_path, attributes=attributes)
+            yield CogOutput(file=out_path, thumbnail=out_path, attributes=attributes)
             
         else:
 
@@ -365,10 +366,10 @@ class Predictor(BasePredictor):
             for frame, t_raw in generator:
                 out_path = out_dir / ("frame_%0.16f.jpg" % t_raw)
                 frame.save(out_path, format='JPEG', subsampling=0, quality=95)
-                if 'thumbnail' not in attributes:
-                    attributes["thumbnail"] = str(out_path)
+                if not thumbnail:
+                    thumbnail = out_path
                 if stream:
-                    yield CogOutput(file=out_path, attributes=attributes)
+                    yield CogOutput(file=out_path, thumbnail=out_path, attributes=attributes)
 
             # run FILM
             if args.n_film > 0:
@@ -383,4 +384,4 @@ class Predictor(BasePredictor):
             if mode == "real2real":
                 attributes["interrogation"] = args.interpolation_texts
 
-            yield CogOutput(file=out_path, attributes=attributes)
+            yield CogOutput(file=out_path, thumbnail=thumbnail, attributes=attributes)
