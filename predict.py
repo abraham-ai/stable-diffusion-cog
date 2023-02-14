@@ -329,7 +329,7 @@ class Predictor(BasePredictor):
             with open(out_path, 'w') as f:
                 f.write(interrogation)
             attributes = {'interrogation': interrogation}
-            yield CogOutput(file=out_path, name=None, thumbnail=None, attributes=attributes, isFinal=True)
+            yield CogOutput(file=out_path, name=interrogation, thumbnail=None, attributes=attributes, isFinal=True, progress=1.0)
 
         elif mode == "generate" or mode == "remix":
 
@@ -344,6 +344,7 @@ class Predictor(BasePredictor):
                     progress = s * stream_every / args.steps
                     yield CogOutput(file=out_path, thumbnail=out_path, attributes=None, progress=progress)
             
+            attributes = None
             if mode == "remix":
                 attributes = {"interrogation": args.text_input}
 
