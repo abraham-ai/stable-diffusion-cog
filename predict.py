@@ -44,7 +44,8 @@ class CogOutput(BaseModel):
     file: Path
     name: Optional[str] = None
     thumbnail: Optional[Path] = None
-    attributes: dict
+    attributes: Optional[dict] = None
+    progress: Optional[float] = None
     isFinal: bool = False
 
 
@@ -336,20 +337,19 @@ class Predictor(BasePredictor):
 
             generator = generation.make_images(args, steps_per_update=steps_per_update)
             
-            attributes = {}
-
-            for frames, t in generator:                
+            for s, (frames, t) in enumerate(generator):
                 for f, frame in enumerate(frames):
                     out_path = out_dir / f"frame_{f:02}_{t:016}.jpg"
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
-                    yield CogOutput(file=out_path, thumbnail=out_path, attributes=attributes)
+                    progress = s * stream_every / args.steps
+                    yield CogOutput(file=out_path, thumbnail=out_path, attributes=None, progress=progress)
             
             if mode == "remix":
                 attributes = {"interrogation": args.text_input}
 
             name = args.text_input
 
-            yield CogOutput(file=out_path, name=name, thumbnail=out_path, attributes=attributes, isFinal=True)
+            yield CogOutput(file=out_path, name=name, thumbnail=out_path, attributes=attributes, isFinal=True, progress=1.0)
             
         else:
 
@@ -363,17 +363,18 @@ class Predictor(BasePredictor):
             # elif mode == "animate":
             #     generator = generation.make_animation(args)
 
-            attributes = {}
+            attributes = None
             thumbnail = None
 
             # generate frames
-            for frame, t_raw in generator:
+            for f, (frame, t_raw) in enumerate(generator):
                 out_path = out_dir / ("frame_%0.16f.jpg" % t_raw)
                 frame.save(out_path, format='JPEG', subsampling=0, quality=95)
+                progress = f / args.n_frames
                 if not thumbnail:
                     thumbnail = out_path
                 if stream:
-                    yield CogOutput(file=out_path, thumbnail=out_path, attributes=attributes)
+                    yield CogOutput(file=out_path, thumbnail=out_path, attributes=attributes, progress=progress)
 
             # run FILM
             if args.n_film > 0:
@@ -390,4 +391,4 @@ class Predictor(BasePredictor):
 
             name = " => ".join(args.interpolation_texts)
 
-            yield CogOutput(file=out_path, name=name, thumbnail=thumbnail, attributes=attributes, isFinal=True)
+            yield CogOutput(file=out_path, name=name, thumbnail=thumbnail, attributes=attributes, isFinal=True, progress=1.0)
