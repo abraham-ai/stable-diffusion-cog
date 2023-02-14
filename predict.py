@@ -3,7 +3,7 @@ import sys
 import tempfile
 import random
 import hashlib
-from typing import Iterator
+from typing import Iterator, Optional
 import moviepy.editor as mpy
 import numpy as np
 from dotenv import load_dotenv
@@ -42,8 +42,10 @@ HALF_PRECISION = True
 
 class CogOutput(BaseModel):
     file: Path
-    thumbnail: Path
+    name: Optional[str] = None
+    thumbnail: Optional[Path] = None
     attributes: dict
+    isFinal: bool = False
 
 
 class Predictor(BasePredictor):
@@ -326,7 +328,7 @@ class Predictor(BasePredictor):
             with open(out_path, 'w') as f:
                 f.write(interrogation)
             attributes = {'interrogation': interrogation}
-            yield CogOutput(file=out_path, thumbnail=None, attributes=attributes)
+            yield CogOutput(file=out_path, name=None, thumbnail=None, attributes=attributes, isFinal=True)
 
         elif mode == "generate" or mode == "remix":
 
@@ -340,12 +342,14 @@ class Predictor(BasePredictor):
                 for f, frame in enumerate(frames):
                     out_path = out_dir / f"frame_{f:02}_{t:016}.jpg"
                     frame.save(out_path, format='JPEG', subsampling=0, quality=95)
-                    yield CogOutput(file=out_path, thumbnail=out_path,attributes=attributes)
+                    yield CogOutput(file=out_path, thumbnail=out_path, attributes=attributes)
             
             if mode == "remix":
                 attributes = {"interrogation": args.text_input}
 
-            yield CogOutput(file=out_path, thumbnail=out_path, attributes=attributes)
+            name = args.text_input
+
+            yield CogOutput(file=out_path, name=name, thumbnail=out_path, attributes=attributes, isFinal=True)
             
         else:
 
@@ -384,4 +388,6 @@ class Predictor(BasePredictor):
             if mode == "real2real":
                 attributes["interrogation"] = args.interpolation_texts
 
-            yield CogOutput(file=out_path, thumbnail=thumbnail, attributes=attributes)
+            name = " => ".join(args.interpolation_texts)
+
+            yield CogOutput(file=out_path, name=name, thumbnail=thumbnail, attributes=attributes, isFinal=True)
